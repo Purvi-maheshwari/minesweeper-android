@@ -1,10 +1,11 @@
 package com.example.minesweeper.data.model
 
 data class GameState(
-    val rows: Int = 9,
-    val cols: Int = 9,
-    val mineCount: Int = 10,
-    val board: List<Cell> = emptyList(),
+    val gameId: Long = System.currentTimeMillis(),
+    val rows: Int,
+    val cols: Int,
+    val mineCount: Int,
+    val board: List<Cell>,
     val isGameOver: Boolean = false,
     val isWin: Boolean = false
 )
