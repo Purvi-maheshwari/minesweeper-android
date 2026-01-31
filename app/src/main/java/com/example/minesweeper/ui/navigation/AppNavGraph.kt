@@ -2,10 +2,14 @@ package com.example.minesweeper.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.minesweeper.data.session.SessionManager
+import com.example.minesweeper.ui.screen.game.GameScreen
+import com.example.minesweeper.ui.screen.home.Difficulty
 import com.example.minesweeper.ui.screen.home.HomeScreen
 import com.example.minesweeper.ui.screen.login.LoginScreen
 
@@ -34,9 +38,15 @@ fun AppNavGraph() {
             }
         }
 
-        composable(route = Routes.HOME) {
+        composable(Routes.HOME) {
             HomeScreen(
                 username = sessionManager.getUsername(),
+                highScore = sessionManager.getHighScore(),
+                onStartGame = { difficulty ->
+                    navController.navigate(
+                        Routes.gameRoute(difficulty.name)
+                    )
+                },
                 onLogout = {
                     sessionManager.logout()
                     navController.navigate(Routes.LOGIN) {
@@ -44,6 +54,26 @@ fun AppNavGraph() {
                     }
                 }
             )
+        }
+
+        composable(
+            route = "${Routes.GAME}/{difficulty}",
+            arguments = listOf(
+                navArgument("difficulty") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+
+            val difficulty =
+                backStackEntry.arguments?.getString("difficulty") ?: Difficulty.EASY.name
+            GameScreen(
+                difficulty = difficulty,
+                onHomeClick = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME) { inclusive = true }
+                    }
+                }
+            )
+
         }
     }
 }

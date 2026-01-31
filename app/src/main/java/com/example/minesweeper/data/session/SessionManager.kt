@@ -23,4 +23,26 @@ class SessionManager(context: Context) {
 
     fun getUsername(): String =
         prefs.getString("username", "") ?: ""
+
+    fun getHighScore(): Int =
+        prefs.getInt("high_score", 0)
+
+    fun saveHighScore(score: Int) {
+        val currentHigh = getHighScore()
+        if (score > currentHigh) {
+            prefs.edit().putInt("high_score", score).apply()
+        }
+    }
+    fun getBestTime(difficulty: String): Int =
+        prefs.getInt("best_time_$difficulty", Int.MAX_VALUE)
+
+    fun saveBestTime(difficulty: String, time: Int) {
+        val currentBest = getBestTime(difficulty)
+        if (time < currentBest) {
+            prefs.edit()
+                .putInt("best_time_$difficulty", time)
+                .apply()
+        }
+    }
+
 }

@@ -2,21 +2,47 @@ package com.example.minesweeper.viewmodel
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.minesweeper.data.model.Cell
 import com.example.minesweeper.data.model.GameState
 import com.example.minesweeper.game.MinesweeperEngine
-
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class GameViewModel : ViewModel() {
+
     private val _gameState = mutableStateOf(createNewGame(Difficulty.EASY))
     val gameState = _gameState
 
     private var currentDifficulty = Difficulty.EASY
 
     enum class Difficulty(val rows: Int, val cols: Int, val mines: Int) {
-        EASY(9, 9, 10),
-        MEDIUM(16, 16, 40),
-        HARD(30, 30, 99)
+        EASY(22, 12, 12),
+        MEDIUM(22, 12, 18),
+        HARD(22, 12, 25)
+    }
+
+    init {
+        startTimerLoop()
+    }
+    private fun startTimerIfNeeded() {
+        val state = _gameState.value
+        if (!state.isTimerRunning) {
+            _gameState.value = state.copy(isTimerRunning = true)
+        }
+    }
+
+    private fun startTimerLoop() {
+        viewModelScope.launch {
+            while (true) {
+                delay(1000)
+                val state = _gameState.value
+                if (state.isTimerRunning && !state.isGameOver) {
+                    _gameState.value =
+                        state.copy(elapsedTime = state.elapsedTime + 1)
+                }
+            }
+        }
     }
 
     fun restart(difficulty: Difficulty = currentDifficulty) {
@@ -24,13 +50,11 @@ class GameViewModel : ViewModel() {
         _gameState.value = createNewGame(difficulty)
     }
 
-
     private fun createNewGame(difficulty: Difficulty): GameState {
-
         val board = MinesweeperEngine.generateBoard(
-            difficulty.rows,
-            difficulty.cols,
-            difficulty.mines
+            rows = difficulty.rows,
+            cols = difficulty.cols,
+            mines = difficulty.mines
         )
 
         return GameState(
@@ -41,10 +65,11 @@ class GameViewModel : ViewModel() {
         )
     }
 
-
     fun onCellClick(row: Int, col: Int) {
         val state = _gameState.value
         if (state.isGameOver) return
+
+        startTimerIfNeeded()
 
         val index = row * state.cols + col
         val cell = state.board[index]
@@ -52,7 +77,20 @@ class GameViewModel : ViewModel() {
         if (cell.isRevealed || cell.isFlagged) return
 
         if (cell.isMine) {
-            revealAllMines()
+            val revealedBoard = state.board.map {
+                if (it.isMine) it.copy(isRevealed = true) else it
+            }
+
+            _gameState.value = state.copy(board = revealedBoard)
+
+            viewModelScope.launch {
+                delay(700)
+                _gameState.value = _gameState.value.copy(
+                    isGameOver = true,
+                    isWin = false,
+                    isTimerRunning = false
+                )
+            }
             return
         }
 
@@ -75,9 +113,8 @@ class GameViewModel : ViewModel() {
             else it
         }
 
-        updateState(newBoard)
+        _gameState.value = state.copy(board = newBoard)
     }
-
 
     private fun revealCells(start: Cell, state: GameState): List<Cell> {
         val board = state.board.toMutableList()
@@ -106,34 +143,22 @@ class GameViewModel : ViewModel() {
                 }
             }
         }
-
         return board
     }
 
-    private fun revealAllMines() {
+    private fun updateState(newBoard: List<Cell>) {
         val state = _gameState.value
 
-        val newBoard = state.board.map {
-            if (it.isMine) it.copy(isRevealed = true) else it
-        }
-
-        _gameState.value = state.copy(
-            board = newBoard,
-            isGameOver = true,
-            isWin = false
-        )
-    }
-
-    private fun updateState(newBoard: List<Cell>) {
         val nonMineCount = newBoard.count { !it.isMine }
         val revealedCount = newBoard.count { !it.isMine && it.isRevealed }
 
         val win = nonMineCount == revealedCount
 
-        _gameState.value = _gameState.value.copy(
+        _gameState.value = state.copy(
             board = newBoard,
             isGameOver = win,
-            isWin = win
+            isWin = win,
+            isTimerRunning = !win
         )
     }
 }

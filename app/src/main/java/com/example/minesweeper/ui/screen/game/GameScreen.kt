@@ -1,78 +1,104 @@
 package com.example.minesweeper.ui.screen.game
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.minesweeper.ui.components.MineCell
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.minesweeper.viewmodel.GameViewModel
 
+fun formatTime(seconds: Int): String {
+    val mins = seconds / 60
+    val secs = seconds % 60
+    return String.format("%02d:%02d", mins, secs)
+}
 @Composable
-fun GameScreen(gameViewModel: GameViewModel) {
+fun GameScreen(
+    difficulty: String,
+    onHomeClick: () -> Unit
+) {
+    val gameViewModel: GameViewModel = viewModel()
     val state = gameViewModel.gameState.value
 
-    Column(modifier = Modifier.padding(2.dp,20.dp)) {
-
-        Row {
-            Button(onClick = {
-                gameViewModel.restart(GameViewModel.Difficulty.EASY)
-            }) {
-                Text("Easy")
-            }
-
-            Button(onClick = { gameViewModel.restart(GameViewModel.Difficulty.MEDIUM) }) {
-                Text("Medium")
-            }
-            Button(onClick = { gameViewModel.restart(GameViewModel.Difficulty.HARD) }) {
-                Text("Hard")
-            }
-            Button(onClick = { gameViewModel.restart() }) {
-                Text("Restart")
-            }
-        }
-
-
-        key(state.gameId) {
-
-            val verticalScroll = rememberScrollState()
-            val horizontalScroll = rememberScrollState()
-
-            Box(
-                modifier = Modifier
-                    .weight(1f) // take remaining screen
-                    .verticalScroll(verticalScroll)
-                    .horizontalScroll(horizontalScroll)
-            ) {
-                Column {
-                    repeat(state.rows) { row ->
-                        Row {
-                            repeat(state.cols) { col ->
-                                val cell = state.board[row * state.cols + col]
-                                MineCell(
-                                    cell = cell,
-                                    onClick = gameViewModel::onCellClick,
-                                    onLongClick = gameViewModel::onCellLongClick
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (state.isGameOver) {
-            Text(
-                text = if (state.isWin) "🎉 You Win!" else "💥 Game Over"
-            )
+    LaunchedEffect(difficulty) {
+        when (difficulty) {
+            "EASY" -> gameViewModel.restart(GameViewModel.Difficulty.EASY)
+            "MEDIUM" -> gameViewModel.restart(GameViewModel.Difficulty.MEDIUM)
+            "HARD" -> gameViewModel.restart(GameViewModel.Difficulty.HARD)
         }
     }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(
+                onClick = {
+                    onHomeClick()
+                }
+            ) {
+                Text("Home")
+            }
+
+            Text(
+                text = "⏱ ${formatTime(state.elapsedTime)}",
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            GameBoardScreen(gameViewModel)
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            onClick = {
+                gameViewModel.restart(
+                    when (difficulty) {
+                        "MEDIUM" -> GameViewModel.Difficulty.MEDIUM
+                        "HARD" -> GameViewModel.Difficulty.HARD
+                        else -> GameViewModel.Difficulty.EASY
+                    }
+                )
+            }
+        ) {
+            Text("Restart")
+        }
+    }
+
+    if (state.isGameOver) {
+        GameOverOverlay(
+            isWin = state.isWin,
+            time = state.elapsedTime,
+            onRestart = {
+                gameViewModel.restart(
+                    when (difficulty) {
+                        "MEDIUM" -> GameViewModel.Difficulty.MEDIUM
+                        "HARD" -> GameViewModel.Difficulty.HARD
+                        else -> GameViewModel.Difficulty.EASY
+                    }
+                )
+            }
+        )
+    }
+
 }
