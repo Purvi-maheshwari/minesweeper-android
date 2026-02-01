@@ -17,9 +17,9 @@ class GameViewModel : ViewModel() {
     private var currentDifficulty = Difficulty.EASY
 
     enum class Difficulty(val rows: Int, val cols: Int, val mines: Int) {
-        EASY(22, 12, 12),
-        MEDIUM(22, 12, 18),
-        HARD(22, 12, 25)
+        EASY(22, 12, 34),
+        MEDIUM(22, 12, 54),
+        HARD(22, 12, 74)
     }
 
     init {

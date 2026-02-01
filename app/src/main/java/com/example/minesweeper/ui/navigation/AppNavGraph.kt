@@ -9,7 +9,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.minesweeper.data.session.SessionManager
 import com.example.minesweeper.ui.screen.game.GameScreen
-import com.example.minesweeper.ui.screen.home.Difficulty
 import com.example.minesweeper.ui.screen.home.HomeScreen
 import com.example.minesweeper.ui.screen.login.LoginScreen
 
@@ -38,14 +37,12 @@ fun AppNavGraph() {
             }
         }
 
-        composable(Routes.HOME) {
+        composable(route = Routes.HOME) {
             HomeScreen(
                 username = sessionManager.getUsername(),
-                highScore = sessionManager.getHighScore(),
+                bestTimeText = "—", // will be dynamic later
                 onStartGame = { difficulty ->
-                    navController.navigate(
-                        Routes.gameRoute(difficulty.name)
-                    )
+                    navController.navigate("${Routes.GAME}/$difficulty")
                 },
                 onLogout = {
                     sessionManager.logout()
@@ -62,9 +59,9 @@ fun AppNavGraph() {
                 navArgument("difficulty") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-
             val difficulty =
-                backStackEntry.arguments?.getString("difficulty") ?: Difficulty.EASY.name
+                backStackEntry.arguments?.getString("difficulty") ?: "EASY"
+
             GameScreen(
                 difficulty = difficulty,
                 onHomeClick = {

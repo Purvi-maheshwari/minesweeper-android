@@ -11,15 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.minesweeper.data.model.Cell
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
@@ -40,7 +32,7 @@ fun MineCell(
 ) {
     val backgroundColor = when {
         cell.isRevealed && cell.isMine -> Color(0xFFD32F2F)
-        cell.isRevealed -> Color(0xFFE0E0E0)
+        cell.isRevealed -> Color(0xFFD0D0D0)
         else -> Color(0xFF424242)
     }
 
@@ -48,7 +40,7 @@ fun MineCell(
         modifier = Modifier
             .size(32.dp)
             .border(
-                width = if (!cell.isRevealed) 1.dp else 0.dp,
+                width = 0.5.dp,
                 color = Color.Black
             )
             .background(backgroundColor)

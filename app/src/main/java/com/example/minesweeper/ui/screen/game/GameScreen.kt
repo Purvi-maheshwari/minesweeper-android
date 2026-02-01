@@ -1,21 +1,18 @@
 package com.example.minesweeper.ui.screen.game
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.minesweeper.ui.util.formatTime
 import com.example.minesweeper.viewmodel.GameViewModel
 
-fun formatTime(seconds: Int): String {
-    val mins = seconds / 60
-    val secs = seconds % 60
-    return String.format("%02d:%02d", mins, secs)
-}
 @Composable
 fun GameScreen(
     difficulty: String,
@@ -24,53 +21,38 @@ fun GameScreen(
     val gameViewModel: GameViewModel = viewModel()
     val state = gameViewModel.gameState.value
 
-    LaunchedEffect(difficulty) {
-        when (difficulty) {
-            "EASY" -> gameViewModel.restart(GameViewModel.Difficulty.EASY)
-            "MEDIUM" -> gameViewModel.restart(GameViewModel.Difficulty.MEDIUM)
-            "HARD" -> gameViewModel.restart(GameViewModel.Difficulty.HARD)
-        }
-    }
-
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TextButton(
-                onClick = {
-                    onHomeClick()
-                }
-            ) {
+
+            TextButton(onClick = onHomeClick) {
                 Text("Home")
             }
 
             Text(
-                text = "⏱ ${formatTime(state.elapsedTime)}",
+                text = formatTime(state.elapsedTime),
                 style = MaterialTheme.typography.titleMedium
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
         Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            contentAlignment = Alignment.TopCenter
         ) {
             GameBoardScreen(gameViewModel)
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
         Button(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
             onClick = {
                 gameViewModel.restart(
                     when (difficulty) {
@@ -79,7 +61,11 @@ fun GameScreen(
                         else -> GameViewModel.Difficulty.EASY
                     }
                 )
-            }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp)
+                .padding(horizontal = 16.dp, vertical = 20.dp)
         ) {
             Text("Restart")
         }
@@ -100,5 +86,4 @@ fun GameScreen(
             }
         )
     }
-
 }
